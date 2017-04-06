@@ -180,35 +180,7 @@ module.exports = function makeWebpackConfig() {
 
   // Skip rendering index.html in test mode
   if (!isTest) {
-    // Reference: https://github.com/ampedandwired/html-webpack-plugin
-    // Render index.html
-    config.plugins.push(
-      new HtmlWebpackPlugin({
-        template: './client/modules/public/views/index.html',
-        filename: 'index.html',
-        chunks: ['app'],
-        inject: 'body'
-      }),
-
-      // Reference: https://github.com/webpack/extract-text-webpack-plugin
-      // Extract css files
-      // Disabled when in test mode or not in build mode
-      new ExtractTextPlugin({filename: 'css/[name].css', disable: !isProd, allChunks: true})
-    );
-
-     config.plugins.push(
-      new HtmlWebpackPlugin({
-        template: './client/modules/public/views/home.html',
-        filename: 'home.html',
-        chunks: ['home'],
-        inject: 'body'
-      }),
-
-      // Reference: https://github.com/webpack/extract-text-webpack-plugin
-      // Extract css files
-      // Disabled when in test mode or not in build mode
-      new ExtractTextPlugin({filename: 'css/[name].css', disable: !isProd, allChunks: true})
-    );
+      config.plugins.push.apply(config.plugins, htmlPluginConfig);
   }
 
   /**
