@@ -1,23 +1,12 @@
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
+let HtmlWebpackPlugin = require('html-webpack-plugin');
+let ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-var modulesConfig = require('./modulesEntry').modulesConfig;
+let modulesConfig = require('./modulesEntry').modulesConfig;
 
 let BASIC_MODULE_PATH='./client/modules/public/views/';
 let htmlPlugin=[];
-
-/**var pageConfigs=[{
-        "template":BASIC_MODULE_PATH+'index.html',
-        "filename": 'index.html',
-        "chunks": ['app']
-},{
-        "template": BASIC_MODULE_PATH+'index.html',
-        "filename": 'home.html',
-        "chunks": ['home']
-}];**/
-
-
-
+let ENV = process.env.npm_lifecycle_event;
+let isProd = ENV === 'build';
 
 for(const key in modulesConfig){
       const fileName=key+'.html';
@@ -32,22 +21,10 @@ for(const key in modulesConfig){
       ) ;
 }
 
-
-
-/**for(let i =0 ;i<pageConfigs.length;i++){
-    const curPageConfig=pageConfigs[i];
-    htmlPlugin.push(new HtmlWebpackPlugin({
-            template: curPageConfig.template,
-            filename: curPageConfig.filename,
-            chunks: curPageConfig.chunks,
-            inject: 'body'
-        })
-      )
-}**/
 // Reference: https://github.com/webpack/extract-text-webpack-plugin
 // Extract css files
 // Disabled when in test mode or not in build mode
-htmlPlugin.push(new ExtractTextPlugin({filename: 'css/[name].css', disable: true, allChunks: true}));
+htmlPlugin.push(new ExtractTextPlugin({filename: 'css/[name].css', disable: !isProd, allChunks: true}));
 
 module.exports={
     htmlPluginConfig:htmlPlugin

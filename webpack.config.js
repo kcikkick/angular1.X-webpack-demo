@@ -15,14 +15,16 @@ var htmlPluginConfig = require('./config/modulesHtmlWebpackPlugin').htmlPluginCo
  * Get npm lifecycle event to identify the environment
  */
 var ENV = process.env.npm_lifecycle_event;
-var isTest = ENV === 'test' || ENV === 'test-watch';
+var isTest = ENV === 'test';
 var isProd = ENV === 'build';
 
 
 //defined the root path
 var ROOT_PATH = path.resolve(__dirname);
 var APP_PATH = path.resolve(ROOT_PATH, 'client');
-var BUILD_PATH = path.resolve(ROOT_PATH, 'build');
+var BUILD_PATH = path.resolve(ROOT_PATH, 'dist');
+
+
 
 module.exports = function makeWebpackConfig() {
   /**
@@ -48,19 +50,19 @@ module.exports = function makeWebpackConfig() {
    */
   config.output =  {
     // Absolute output directory
-    path: __dirname + '/dist',
+    path: BUILD_PATH,
 
     // Output path from the view of the page
     // Uses webpack-dev-server in development
-    //publicPath: isProd ? '/' : 'http://localhost:2525/',
+    publicPath: isProd ? '/' : 'http://localhost:2525/',
 
     // Filename for entry points
     // Only adds hash in build mode
-    filename: isProd ? '[name].[hash].js' : '[name]-[hash].js',
+    filename: isProd ? '[name].[hash].js' :'[name]-[hash].js',
 
     // Filename for non-entry points
     // Only adds hash in build mode
-    //chunkFilename: isProd ? '[name].[hash].js' : '[name]-[hash].js'
+    chunkFilename: isProd ? '[name].[hash].js' : '[name]-[hash].js'
   };
 
   /**
@@ -109,7 +111,7 @@ module.exports = function makeWebpackConfig() {
       // Reference: https://github.com/webpack/style-loader
       // Use style-loader in development.
 
-      loader: isTest ? 'null-loader' : ExtractTextPlugin.extract({
+      loader: ExtractTextPlugin.extract({
         fallbackLoader: 'style-loader',
         loader: [
           {loader: 'css-loader', query: {sourceMap: true}},
@@ -133,25 +135,6 @@ module.exports = function makeWebpackConfig() {
       loader: 'raw-loader'
     }]
   };
-
-  // ISTANBUL LOADER
-  // https://github.com/deepsweet/istanbul-instrumenter-loader
-  // Instrument JS files with istanbul-lib-instrument for subsequent code coverage reporting
-  // Skips node_modules and files that end with .spec.js
-  if (isTest) {
-    config.module.rules.push({
-      enforce: 'pre',
-      test: /\.js$/,
-      exclude: [
-        /node_modules/,
-        /\.spec\.js$/
-      ],
-      loader: 'istanbul-instrumenter-loader',
-      query: {
-        esModules: true
-      }
-    })
-  }
 
   /**
    * PostCSS
@@ -177,12 +160,42 @@ module.exports = function makeWebpackConfig() {
     }),
     new webpack.HotModuleReplacementPlugin()
   ];
+  config.plugins.push(
+    //provide $, jQuery and window.jQuery to every script
+    new webpack.ProvidePlugin({
+      $: "jquery",
+      jQuery: "jquery",
+      "window.jQuery": "jquery"
+    })
+  );
 
   // Skip rendering index.html in test mode
   if (!isTest) {
       config.plugins.push.apply(config.plugins, htmlPluginConfig);
   }
 
+  // Add build specific plugins
+  if (isProd) {
+    config.plugins.push(
+      // Reference: http://webpack.github.io/docs/list-of-plugins.html#noerrorsplugin
+      // Only emit files when there are no errors
+      new webpack.NoErrorsPlugin(),
+
+      // Reference: http://webpack.github.io/docs/list-of-plugins.html#dedupeplugin
+      // Dedupe modules in the output
+      new webpack.optimize.DedupePlugin(),
+
+      // Reference: http://webpack.github.io/docs/list-of-plugins.html#uglifyjsplugin
+      // Minify all javascript, switch loaders to minimizing mode
+      new webpack.optimize.UglifyJsPlugin(),
+
+      // Copy assets from the public folder
+      // Reference: https://github.com/kevlened/copy-webpack-plugin
+      new CopyWebpackPlugin([{
+        from: __dirname + '/client/modules/public'
+      }])
+    )
+  }
   /**
    * Dev server configuration
    * Reference: http://webpack.github.io/docs/configuration.html#devserver
