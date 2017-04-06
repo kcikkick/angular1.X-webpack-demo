@@ -1,11 +1,11 @@
 import angular from 'angular';
 
 import '../public/static/css/app.css';
-import AppCtrl from './controllers/home.client.controllers';
+import AppCtrl from './controllers/app.client.controllers';
 
 let app = () => {
   return {
-    template: require('./views/home.html'),
+    template: require('./views/app.html'),
     controller: 'AppCtrl',
     controllerAs: 'app'
   }

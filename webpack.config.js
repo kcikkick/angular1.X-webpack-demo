@@ -7,6 +7,8 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var path = require('path');
+var modulesConfig = require('./config/modulesEntry').modulesConfig;
+var htmlPluginConfig = require('./config/modulesHtmlWebpackPlugin').htmlPluginConfig;
 
 /**
  * Env
@@ -36,9 +38,7 @@ module.exports = function makeWebpackConfig() {
    * Should be an empty object if it's generating a test build
    * Karma will set this when it's a test build
    */
-  config.entry = isTest ? void 0 : {
-    app: './client/modules/home/home.client.module.js'
-  };
+  config.entry = modulesConfig;
 
   /**
    * Output
@@ -46,21 +46,21 @@ module.exports = function makeWebpackConfig() {
    * Should be an empty object if it's generating a test build
    * Karma will handle setting it up for you when it's a test build
    */
-  config.output = isTest ? {} : {
+  config.output =  {
     // Absolute output directory
     path: __dirname + '/dist',
 
     // Output path from the view of the page
     // Uses webpack-dev-server in development
-    publicPath: isProd ? '/' : 'http://localhost:2525/',
+    //publicPath: isProd ? '/' : 'http://localhost:2525/',
 
     // Filename for entry points
     // Only adds hash in build mode
-    filename: isProd ? '[name].[hash].js' : '[name].bundle.js',
+    filename: isProd ? '[name].[hash].js' : '[name]-[hash].js',
 
     // Filename for non-entry points
     // Only adds hash in build mode
-    chunkFilename: isProd ? '[name].[hash].js' : '[name].bundle.js'
+    //chunkFilename: isProd ? '[name].[hash].js' : '[name]-[hash].js'
   };
 
   /**
@@ -185,6 +185,8 @@ module.exports = function makeWebpackConfig() {
     config.plugins.push(
       new HtmlWebpackPlugin({
         template: './client/modules/public/views/index.html',
+        filename: 'index.html',
+        chunks: ['app'],
         inject: 'body'
       }),
 
@@ -192,7 +194,21 @@ module.exports = function makeWebpackConfig() {
       // Extract css files
       // Disabled when in test mode or not in build mode
       new ExtractTextPlugin({filename: 'css/[name].css', disable: !isProd, allChunks: true})
-    )
+    );
+
+     config.plugins.push(
+      new HtmlWebpackPlugin({
+        template: './client/modules/public/views/home.html',
+        filename: 'home.html',
+        chunks: ['home'],
+        inject: 'body'
+      }),
+
+      // Reference: https://github.com/webpack/extract-text-webpack-plugin
+      // Extract css files
+      // Disabled when in test mode or not in build mode
+      new ExtractTextPlugin({filename: 'css/[name].css', disable: !isProd, allChunks: true})
+    );
   }
 
   /**
